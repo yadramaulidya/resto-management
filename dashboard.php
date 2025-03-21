@@ -5,7 +5,7 @@ include '.includes/toast_notification.php';
 ?>
 
 <div class="container-xxl flex-grow-1 container-p-y">
-    <!-- Card untuk menampilkan tabel pesanan -->
+    <!-- tabel pesanan -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Daftar Pesanan</h4>
@@ -85,7 +85,7 @@ include '.includes/toast_notification.php';
         </div>
     </div>
 
-    <!-- Card untuk menampilkan daftar menu -->
+    <!-- daftar menu -->
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Daftar Menu</h4>
@@ -103,7 +103,7 @@ include '.includes/toast_notification.php';
                     <tbody class="table-border-bottom-0">
                         <?php
                         $index = 1;
-                        $query = "SELECT id, nama, harga FROM menu";
+                        $query = "SELECT menu_id, nama, harga FROM menu";
                         $exec = mysqli_query($conn, $query);
 
                         while ($menu = mysqli_fetch_assoc($exec)) :  
@@ -120,7 +120,7 @@ include '.includes/toast_notification.php';
         </div>
     </div>
 
-    <!-- Card untuk menampilkan daftar pelanggan -->
+    <!-- daftar pelanggan -->
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Daftar Pelanggan</h4>
@@ -138,7 +138,7 @@ include '.includes/toast_notification.php';
                     <tbody class="table-border-bottom-0">
                         <?php
                         $index = 1;
-                        $query = "SELECT id, nama, email FROM pelanggan";
+                        $query = "SELECT pelanggan_id, nama, kontak FROM pelanggan";
                         $exec = mysqli_query($conn, $query);
 
                         while ($pelanggan = mysqli_fetch_assoc($exec)) :  
@@ -146,7 +146,7 @@ include '.includes/toast_notification.php';
                         <tr>
                             <td><?= $index++; ?></td>
                             <td><?= $pelanggan['nama']; ?></td>
-                            <td><?= $pelanggan['email']; ?></td>
+                            <td><?= $pelanggan['kontak']; ?></td>
                         </tr>
                         <?php endwhile; ?>
                     </tbody>
