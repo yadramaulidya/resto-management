@@ -13,7 +13,7 @@ include "init_session.php";
     initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
 
-    <title>Dashboard &mdash; IdeKreatif</title>
+    <title>Dashboard &mdash; BiteNest 🍖</title>
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/img/favicon/favicon.ico" />
     <!-- Fonts -->
