@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION["kontak"] = $kontak;
             $_SESSION["nama"] = $row["nama"]; 
 
-            $_SESSION["user_id"] = $row["id_pelanggan"];
+            $_SESSION["user_id"] = $row["pelanggan_id"];
             //Set notifikasi selamat datang
             $_SESSION['notification'] = [
                 'type' => 'primary',
