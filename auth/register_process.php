@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = $_POST["nama"];
     $password = $_POST["password"];
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-}
+
 $sql = "INSERT INTO pelanggan (kontak, nama, password)
 VALUES ('$kontak', '$nama', '$hashedPassword')";
 if ($conn->query($sql) === TRUE) {
@@ -26,6 +26,6 @@ if ($conn->query($sql) === TRUE) {
 header('Location: login.php');
 exit();
 
-
+}
 $conn->close();
 ?>
