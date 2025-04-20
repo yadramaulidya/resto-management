@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $_SESSION['notification'] = [
             'type' => 'danger',
-            'message' => 'Gagal Registrasi: ' . $stmt->error
+            'message' => 'Gagall Registrasi: ' . $stmt->error
         ];
     }
 
