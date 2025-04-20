@@ -15,7 +15,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $row["password"])) {
             $_SESSION["kontak"] = $kontak;
             $_SESSION["nama"] = $row["nama"]; 
-
             $_SESSION["user_id"] = $row["id_pelanggan"];
             //Set notifikasi selamat datang
             $_SESSION['notification'] = [
