@@ -1,191 +1,108 @@
-<?php
-include(".includes/header.php");
-$title = "Dashboard";
-include '.includes/toast_notification.php';
+<?php 
+session_start();  // Mulai session untuk mengakses session variables
+require_once("../config.php");
 
-// Cek role user
-$role = $_SESSION['role'];
-$user_id = $_SESSION['user_id'];
+// Cek apakah user sudah login
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+    exit();
+}
+
+$role = $_SESSION["role"];  // Mendapatkan role dari session
+$nama = $_SESSION["nama"];  // Mendapatkan nama dari session
 ?>
 
+<?php include(".layouts/header.php"); ?>
+<!-- Dashboard -->
 <div class="container-xxl flex-grow-1 container-p-y">
+    <h2>Hai, <?= htmlspecialchars($nama) ?>!</h2>
 
-<?php if ($role === 'admin') : ?>
-    <!-- DAFTAR PESANAN -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Daftar Pesanan</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive text-nowrap">
-                <table id="datatable" class="table table-hover">
+    <?php if ($role === "admin"): ?>
+        <!-- Admin Dashboard -->
+        <h4>Selamat datang di Dashboard Admin</h4>
+        <p>Kelola menu dan pesanan pelanggan di sini!</p>
+
+        <!-- Tabel Pesanan -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Daftar Pesanan</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
                     <thead>
-                        <tr class="text-center">
-                            <th>#</th>
-                            <th>Pelanggan</th>
+                        <tr>
+                            <th>Nama Pelanggan</th>
                             <th>Menu</th>
                             <th>Jumlah</th>
                             <th>Status</th>
-                            <th>Pilihan</th>
+                            <th>Tanggal Pemesanan</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $index = 1;
-                        $query = "SELECT pesanan.*, users.nama AS pelanggan, menu.nama AS menu
-                                  FROM pesanan
-                                  INNER JOIN users ON pesanan.user_id = users.user_id
-                                  INNER JOIN menu ON pesanan.menu_id = menu.menu_id";
-                        $exec = mysqli_query($conn, $query);
+                        // Query untuk mengambil pesanan dari database
+                        $query = "SELECT p.pesanan_id, u.nama AS pelanggan, m.nama AS menu, p.jumlah, p.status, p.tanggal_pemesanan 
+                                  FROM pesanan p 
+                                  JOIN users u ON p.user_id = u.user_id 
+                                  JOIN menu m ON p.menu_id = m.menu_id";
+                        $result = mysqli_query($conn, $query);
 
-                        while ($pesanan = mysqli_fetch_assoc($exec)) : ?>
-                        <tr>
-                            <td><?= $index++; ?></td>
-                            <td><?= $pesanan['pelanggan']; ?></td>
-                            <td><?= $pesanan['menu']; ?></td>
-                            <td><?= $pesanan['jumlah']; ?></td>
-                            <td><?= $pesanan['status']; ?></td>
-                            <td>
-                                <!-- Aksi Dropdown -->
-                                <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="bx bx-dots-vertical-rounded"></i>
-                                    </button>
-                                    <div class="dropdown-menu">
-                                        <a href="edit_pesanan.php?id=<?= $pesanan['pesanan_id']; ?>" class="dropdown-item">
-                                            <i class="bx bx-edit-alt me-2"></i> Edit
-                                        </a>
-                                        <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deletePesanan_<?= $pesanan['pesanan_id']; ?>">
-                                            <i class="bx bx-trash me-2"></i> Delete
-                                        </a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Modal Hapus -->
-                        <div class="modal fade" id="deletePesanan_<?= $pesanan['pesanan_id']; ?>" tabindex="-1">
-                            <div class="modal-dialog">
-                                <form action="proses_pesanan.php" method="POST" class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Hapus Pesanan?</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <p>Tindakan ini tidak bisa dibatalkan.</p>
-                                        <input type="hidden" name="pesananID" value="<?= $pesanan['pesanan_id']; ?>">
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" name="delete" class="btn btn-primary">Hapus</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        <?php endwhile; ?>
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            echo "<tr>
+                                <td>{$row['pelanggan']}</td>
+                                <td>{$row['menu']}</td>
+                                <td>{$row['jumlah']}</td>
+                                <td>{$row['status']}</td>
+                                <td>{$row['tanggal_pemesanan']}</td>
+                              </tr>";
+                        }
+                        ?>
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
 
-    <!-- DAFTAR MENU -->
-    <div class="card mt-4">
-        <div class="card-header"><h4>Daftar Menu</h4></div>
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr class="text-center">
-                        <th>#</th>
-                        <th>Nama</th>
-                        <th>Harga</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $index = 1;
-                    $query = "SELECT * FROM menu";
-                    $exec = mysqli_query($conn, $query);
-                    while ($menu = mysqli_fetch_assoc($exec)) :
-                    ?>
-                    <tr>
-                        <td><?= $index++; ?></td>
-                        <td><?= $menu['nama']; ?></td>
-                        <td><?= $menu['harga']; ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <?php elseif ($role === "pelanggan"): ?>
+        <!-- Pelanggan Dashboard -->
+        <h4>Selamat datang di Dashboard Pelanggan</h4>
+        <p>Pilih menu favorit kamu dan lakukan pemesanan!</p>
 
-    <!-- DAFTAR PELANGGAN -->
-    <div class="card mt-4">
-        <div class="card-header"><h4>Daftar Pelanggan</h4></div>
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr class="text-center">
-                        <th>#</th>
-                        <th>Nama</th>
-                        <th>Kontak</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $index = 1;
-                    $query = "SELECT * FROM users WHERE role = 'pelanggan'";
-                    $exec = mysqli_query($conn, $query);
-                    while ($user = mysqli_fetch_assoc($exec)) :
-                    ?>
-                    <tr>
-                        <td><?= $index++; ?></td>
-                        <td><?= $user['nama']; ?></td>
-                        <td><?= $user['kontak']; ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <!-- Tabel Menu -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Menu Tersedia</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nama Menu</th>
+                            <th>Kategori</th>
+                            <th>Harga</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        // Query untuk mengambil menu dari database
+                        $query = "SELECT * FROM menu";
+                        $result = mysqli_query($conn, $query);
 
-<?php else : ?>
-    <!-- DASHBOARD PELANGGAN -->
-    <div class="card">
-        <div class="card-header"><h4>Pesanan Kamu</h4></div>
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr class="text-center">
-                        <th>#</th>
-                        <th>Menu</th>
-                        <th>Jumlah</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $index = 1;
-                    $query = "SELECT pesanan.*, menu.nama AS menu
-                              FROM pesanan
-                              INNER JOIN menu ON pesanan.menu_id = menu.menu_id
-                              WHERE pesanan.user_id = $user_id";
-                    $exec = mysqli_query($conn, $query);
-                    while ($pesanan = mysqli_fetch_assoc($exec)) :
-                    ?>
-                    <tr>
-                        <td><?= $index++; ?></td>
-                        <td><?= $pesanan['menu']; ?></td>
-                        <td><?= $pesanan['jumlah']; ?></td>
-                        <td><?= $pesanan['status']; ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            echo "<tr>
+                                <td>{$row['nama']}</td>
+                                <td>{$row['kategori']}</td>
+                                <td>Rp " . number_format($row['harga'], 0, ',', '.') . "</td>
+                                <td><a href='order.php?menu_id={$row['menu_id']}' class='btn btn-primary btn-sm'>Pesan</a></td>
+                              </tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-<?php endif; ?>
+    <?php endif; ?>
 
 </div>
-
-<?php include(".includes/footer.php"); ?>
+<!-- /Dashboard -->
+<?php include(".layouts/footer.php"); ?>
