@@ -1,48 +1,59 @@
-<?php
-session_start();
+<?php 
+session_start();  // Mulai session untuk mengakses session variables
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $kontak = $_POST["kontak"];
+  
+    $username = $_POST["username"];
     $password = $_POST["password"];
 
-    $sql = "SELECT * FROM pelanggan WHERE kontak='$kontak'";
-    $result = $conn->query($sql);
+    
+    $stmt = $conn->prepare("SELECT user_id, nama, username, password, role FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);  // 's' berarti string
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        //verifikasi password
-        if (password_verify($password, $row["password"])) {
-            $_SESSION["kontak"] = $kontak;
-            $_SESSION["nama"] = $row["nama"]; 
-            $_SESSION["user_id"] = $row["id_pelanggan"];
-            //Set notifikasi selamat datang
+    // Jika username ditemukan
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+
+        // Verifikasi password
+        if (password_verify($password, $user["password"])) {
+            // Menyimpan session data jika login berhasil
+            $_SESSION["user_id"] = $user["user_id"];
+            $_SESSION["nama"] = $user["nama"];
+            $_SESSION["username"] = $user["username"];
+            $_SESSION["role"] = $user["role"];
+
+            // Set notifikasi selamat datang
             $_SESSION['notification'] = [
                 'type' => 'primary',
-                'message' => 'hai! senang bertemu kembali 🍖'
+                'message' => 'Hai! Senang bertemu kembali 🍖'
             ];
-            //Redirect ke dashboard
+
+            // Arahkan ke dashboard berdasarkan role
             header('Location: ../dashboard.php');
             exit();
         } else {
-            //password salah
+            // Jika password salah
             $_SESSION['notification'] = [
                 'type' => 'danger',
-                'message' => 'woops! passwordnya salah. coba di cek lagi yaa! 👩🏾'
+                'message' => 'Password salah!'
             ];
+            header('Location: login.php');
+            exit();
+        }
+    } else {
+        
+        $_SESSION['notification'] = [
+            'type' => 'danger',
+            'message' => 'Username tidak ditemukan!'
+        ];
+        header('Location: login.php');
+        exit();
     }
-} else {
-    // Username tidak ditemukan
-    $_SESSION['notification'] = [
-        'type' => 'danger',
-        'message' => 'woops! kontaknya nggak ketemu. coba di cek lagi yaa! 👩🏾'
-    ];
-}
 }
 
-//Redirect kembali ke halaman login jika gagal
-header('Location: login.php');
-exit();
 
 $conn->close();
 ?>
