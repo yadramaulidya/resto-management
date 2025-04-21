@@ -1,10 +1,10 @@
 <?php 
-session_start();  // Mulai session untuk mengakses session variables
+session_start();  
 require_once("../config.php");
 
-// Cek apakah user sudah login
+
 if (!isset($_SESSION["user_id"])) {
-    header("Location: login.php");
+    header("Location: login.php");  
     exit();
 }
 
@@ -20,7 +20,7 @@ $nama = $_SESSION["nama"];  // Mendapatkan nama dari session
     <?php if ($role === "admin"): ?>
         <!-- Admin Dashboard -->
         <h4>Selamat datang di Dashboard Admin</h4>
-        <p>Kelola menu dan pesanan pelanggan di sini!</p>
+        <p> menu dan pesanan pelanggan di sini!</p>
 
         <!-- Tabel Pesanan -->
         <div class="card">
@@ -93,7 +93,16 @@ $nama = $_SESSION["nama"];  // Mendapatkan nama dari session
                                 <td>{$row['nama']}</td>
                                 <td>{$row['kategori']}</td>
                                 <td>Rp " . number_format($row['harga'], 0, ',', '.') . "</td>
-                                <td><a href='order.php?menu_id={$row['menu_id']}' class='btn btn-primary btn-sm'>Pesan</a></td>
+                                <td>
+                                    <form method='post' action='menu.php'>
+                                        <input type='hidden' name='menu_id' value='{$row['menu_id']}'>
+                                        <div class='form-group'>
+                                            <label for='qty'>Jumlah</label>
+                                            <input type='number' name='qty' class='form-control' min='1' value='1'>
+                                        </div>
+                                        <button type='submit' name='add_to_cart' class='btn btn-primary btn-sm'>Tambah ke Keranjang</button>
+                                    </form>
+                                </td>
                               </tr>";
                         }
                         ?>
@@ -101,6 +110,32 @@ $nama = $_SESSION["nama"];  // Mendapatkan nama dari session
                 </table>
             </div>
         </div>
+
+        <!-- Keranjang -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="cart-section">
+                    <h4>Keranjang Belanja</h4>
+                    <?php if (empty($_SESSION['cart'])): ?>
+                        <p>Keranjang Anda kosong.</p>
+                    <?php else: ?>
+                        <ul class="list-group">
+                            <?php foreach ($_SESSION['cart'] as $cart_item): ?>
+                                <li class="list-group-item">
+                                    <?php echo $cart_item['nama']; ?> x <?php echo $cart_item['qty']; ?> - Rp <?php echo number_format($cart_item['subtotal'], 0, ',', '.'); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <p>Total: Rp <?php echo number_format($total_belanja, 0, ',', '.'); ?></p>
+                        <form method="post" action="menu.php">
+                            <button type="submit" name="clear_cart" class="btn btn-danger btn-block">Kosongkan Keranjang</button>
+                            <a href="checkout.php" class="btn btn-success btn-block mt-2">Checkout</a>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
     <?php endif; ?>
 
 </div>
