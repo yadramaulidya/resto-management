@@ -49,7 +49,7 @@ if ($result->num_rows > 0) {
         'message' => 'woops! kontaknya nggak ketemu. coba di cek lagi yaa! 👩🏾'
     ];
 }
-}
+
 
 //Redirect kembali ke halaman login jika gagal
 header('Location: login.php');
