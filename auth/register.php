@@ -1,4 +1,5 @@
 <?php include(".layouts/header.php"); ?>
+
 <!-- Register Card -->
 <div class="card">
   <div class="card-body">
@@ -10,33 +11,39 @@
       </a>
     </div>
     
-    <!-- /Logo -->
-    <form action="register_process.php" class="mb-3" method="POST">
+    <h4 class="mb-2">Daftar untuk membuat akun baru</h4>
+
+    <!-- Cek apakah ada notifikasi -->
+    <?php if (isset($_SESSION['error_message'])): ?>
+        <div class="alert alert-danger">
+            <?php echo $_SESSION['error_message']; ?>
+        </div>
+        <?php unset($_SESSION['error_message']); ?>
+    <?php endif; ?>
+
+    <!-- Form Register -->
+    <form action="register_process.php" method="POST">
       <div class="mb-3">
         <label for="kontak" class="form-label">Kontak</label>
-        <input type="text" class="form-control" name="kontak" placeholder="Masukkan kontak" autofocus required />
+        <input type="text" class="form-control" name="kontak" placeholder="Kontak" required />
       </div>
 
       <div class="mb-3">
         <label for="nama" class="form-label">Nama</label>
-        <input type="text" class="form-control" name="nama" placeholder="Masukkan nama" required />
+        <input type="text" class="form-control" name="nama" placeholder="Nama" required />
       </div>
 
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" name="username" placeholder="Buat username" required />
+        <input type="text" class="form-control" name="username" placeholder="Username" required />
       </div>
 
-      <div class="mb-3 form-password-toggle">
-        <label class="form-label" for="password">Password</label>
-        <div class="input-group input-group-merge">
-          <input type="password" class="form-control" name="password"
-            placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" required />
-          <span class="input-group-text cursor-pointer"><i class="bx bx-hide"></i></span>
-        </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" name="password" placeholder="Password" required />
       </div>
 
-      <button class="btn btn-primary d-grid w-100">Daftar</button>
+      <button type="submit" class="btn btn-primary d-grid w-100">Daftar</button>
     </form>
 
     <p class="text-center">
@@ -45,5 +52,6 @@
     </p>
   </div>
 </div>
-<!-- Register Card -->
+<!-- /Register Card -->
+
 <?php include(".layouts/footer.php"); ?>
