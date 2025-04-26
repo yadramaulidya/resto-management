@@ -3,7 +3,7 @@ session_start();
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data dari form
+    // bil data dari form
     $kontak = $_POST['kontak'];
     $nama = $_POST['nama'];
     $username = $_POST['username'];
@@ -19,10 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Enkripsi password
+    // enkripsi password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Masukkan data pengguna baru ke dalam tabel users
     $insert_query = "INSERT INTO users (kontak, nama, username, password, role) 
                      VALUES ('$kontak', '$nama', '$username', '$hashed_password', 'pelanggan')";
     
