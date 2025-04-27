@@ -1,85 +1,34 @@
-<?php 
- fitur-login
-session_start();  
+<?php
+session_start();
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
- 
     $username = $_POST["username"];
     $password = $_POST["password"];
 
+    $query = "SELECT user_id, nama, username, password, role FROM users WHERE username = '$username'";
+    $result = mysqli_query($conn, $query);
 
-    $stmt = $conn->prepare("SELECT user_id, nama, username, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);  
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if ($result) {
+        $user = mysqli_fetch_assoc($result);
 
-
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-
-       
-=======
-session_start();  // Mulai session untuk mengakses session variables
-require_once("../config.php");
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  
-    $username = $_POST["username"];
-    $password = $_POST["password"];
-
+        if ($user && password_verify($password, $user['password'])) {
     
-    $stmt = $conn->prepare("SELECT user_id, nama, username, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username);  // 's' berarti string
-    $stmt->execute();
-    $result = $stmt->get_result();
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['nama'] = $user['nama'];
 
-    // Jika username ditemukan
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-
-        // Verifikasi password
- main
-        if (password_verify($password, $user["password"])) {
-            // Menyimpan session data jika login berhasil
-            $_SESSION["user_id"] = $user["user_id"];
-            $_SESSION["nama"] = $user["nama"];
-            $_SESSION["username"] = $user["username"];
-            $_SESSION["role"] = $user["role"];
-
-            // Set notifikasi selamat datang
-            $_SESSION['notification'] = [
-                'type' => 'primary',
-                'message' => 'Hai! Senang bertemu kembali 🍖'
-            ];
-
-            // Arahkan ke dashboard berdasarkan role
-            header('Location: ../dashboard.php');
+            header("Location: ../dashboard.php");
             exit();
         } else {
-            // Jika password salah
-            $_SESSION['notification'] = [
-                'type' => 'danger',
-                'message' => 'Password salah!'
-            ];
-            header('Location: login.php');
+            $_SESSION['error_message'] = "Password salah!";
+            header("Location: login.php");
             exit();
         }
     } else {
-fitur-login
-        // Jika username tidak ditemukan
-
-        
- main
-        $_SESSION['notification'] = [
-            'type' => 'danger',
-            'message' => 'Username tidak ditemukan!'
-        ];
-        header('Location: login.php');
+        $_SESSION['error_message'] = "Username tidak ditemukan!";
+        header("Location: login.php");
         exit();
     }
 }
-
-
-$conn->close();
 ?>
