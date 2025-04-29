@@ -10,8 +10,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
 
     // Cek apakah username sudah ada
-    $query = "SELECT * FROM users WHERE username = '$username'";
-    $result = mysqli_query($conn, $query);
+    $query = "SELECT * FROM users WHERE username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if (mysqli_num_rows($result) > 0) {
         $_SESSION['error_message'] = "Username sudah digunakan!";
@@ -23,9 +26,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     $insert_query = "INSERT INTO users (kontak, nama, username, password, role) 
-                     VALUES ('$kontak', '$nama', '$username', '$hashed_password', 'pelanggan')";
-    
-    if (mysqli_query($conn, $insert_query)) {
+                     VALUES (?, ?, ?, ?, 'pelanggan')";
+    $stmt_insert = $conn->prepare($insert_query);
+    $stmt_insert->bind_param("ssss", $kontak, $nama, $username, $hashed_password);
+
+    if ($stmt_insert->execute()) {
         $_SESSION['success_message'] = "Pendaftaran berhasil! Silakan login.";
         header("Location: login.php");
         exit();
