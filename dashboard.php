@@ -1,108 +1,133 @@
-<?php 
-session_start();  // Mulai session untuk mengakses session variables
-require_once("../config.php");
+<?php
+require_once('config.php');
+include('.includes/header.php');
 
-// Cek apakah user sudah login
-if (!isset($_SESSION["user_id"])) {
-    header("Location: login.php");
-    exit();
+if (!isset($_SESSION['role'])) {
+    header('Location: login.php');
+    exit;
 }
 
-$role = $_SESSION["role"];  // Mendapatkan role dari session
-$nama = $_SESSION["nama"];  // Mendapatkan nama dari session
+$title = "Dashboard";
+
+// klau admin
+if ($_SESSION['role'] === 'admin') {
+
+    // ringkasan pesanan pending
+    $query_pesanan = "SELECT COUNT(*) AS total_pesanan FROM pesanan WHERE status = 'pending'";
+    $pesanan_result = mysqli_query($conn, $query_pesanan);
+    $pesanan_data = mysqli_fetch_assoc($pesanan_result);
+
+    // menu terlaku
+    $query_menu_terlaris = "SELECT menu.nama, SUM(pesanan.jumlah) AS total_terjual
+                            FROM pesanan
+                            JOIN menu ON pesanan.menu_id = menu.menu_id
+                            GROUP BY menu.menu_id
+                            ORDER BY total_terjual DESC LIMIT 1";
+    $menu_terlaris_result = mysqli_query($conn, $query_menu_terlaris);
+    $menu_terlaris = mysqli_fetch_assoc($menu_terlaris_result);
+
+    ?>
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <h1 class="my-4">Dashboard Admin</h1>
+
+        <div class="row">
+            <!-- Ringkasan Pesanan -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pesanan Pending</h5>
+                        <p class="card-text"><?php echo $pesanan_data['total_pesanan']; ?> pesanan pending</p>
+                        <a href="pesanan.php" class="btn btn-primary">Lihat Pesanan</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Terlaris -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Menu Terlaris</h5>
+                        <p class="card-text"><?php echo $menu_terlaris['nama']; ?> - Terjual <?php echo $menu_terlaris['total_terjual']; ?> kali</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Pesanan -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pesanan yang Sedang Diproses</h5>
+                        <p class="card-text">Status pesanan akan ditampilkan di sini.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+} else if ($_SESSION['role'] === 'pelanggan') {
+    // kalau pelanggan
+
+    $user_id = $_SESSION['user_id'];
+    // ambil pesNAN dr pelanghgan
+    $query_pesanan = "SELECT COUNT(*) AS total_pesanan_pending FROM pesanan WHERE user_id = '$user_id' AND status = 'pending'";
+    $pesanan_result = mysqli_query($conn, $query_pesanan);
+    $pesanan_data = mysqli_fetch_assoc($pesanan_result);
+
+    //ambil riwayat pesanan pelanggan
+    $query_riwayat = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama as menu_name
+                      FROM pesanan
+                      JOIN menu ON pesanan.menu_id = menu.menu_id
+                      WHERE pesanan.user_id = '$user_id'";
+    $riwayat_pesanan = mysqli_query($conn, $query_riwayat);
+    ?>
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <h1 class="my-4">Dashboard Pelanggan</h1>
+
+        <div class="row">
+            <!-- Ringkasan Pesanan Pending -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Pesanan Pending</h5>
+                        <p class="card-text"><?php echo $pesanan_data['total_pesanan_pending']; ?> pesanan pending</p>
+                        <a href="pesan_menu.php" class="btn btn-primary">Pesan Sekarang</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Riwayat Pesanan -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Riwayat Pesanan</h5>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Menu</th>
+                                    <th>Jumlah</th>
+                                    <th>Status</th>
+                                    <th>Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php while ($row = mysqli_fetch_assoc($riwayat_pesanan)): ?>
+                                    <tr>
+                                        <td><?php echo $row['pesanan_id']; ?></td>
+                                        <td><?php echo $row['menu_name']; ?></td>
+                                        <td><?php echo $row['jumlah']; ?></td>
+                                        <td><?php echo ucfirst($row['status']); ?></td>
+                                        <td><?php echo $row['tanggal_pemesanan']; ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+include('.includes/footer.php');
 ?>
-
-<?php include(".layouts/header.php"); ?>
-<!-- Dashboard -->
-<div class="container-xxl flex-grow-1 container-p-y">
-    <h2>Hai, <?= htmlspecialchars($nama) ?>!</h2>
-
-    <?php if ($role === "admin"): ?>
-        <!-- Admin Dashboard -->
-        <h4>Selamat datang di Dashboard Admin</h4>
-        <p>Kelola menu dan pesanan pelanggan di sini!</p>
-
-        <!-- Tabel Pesanan -->
-        <div class="card">
-            <div class="card-header">
-                <h4>Daftar Pesanan</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Nama Pelanggan</th>
-                            <th>Menu</th>
-                            <th>Jumlah</th>
-                            <th>Status</th>
-                            <th>Tanggal Pemesanan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        // Query untuk mengambil pesanan dari database
-                        $query = "SELECT p.pesanan_id, u.nama AS pelanggan, m.nama AS menu, p.jumlah, p.status, p.tanggal_pemesanan 
-                                  FROM pesanan p 
-                                  JOIN users u ON p.user_id = u.user_id 
-                                  JOIN menu m ON p.menu_id = m.menu_id";
-                        $result = mysqli_query($conn, $query);
-
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo "<tr>
-                                <td>{$row['pelanggan']}</td>
-                                <td>{$row['menu']}</td>
-                                <td>{$row['jumlah']}</td>
-                                <td>{$row['status']}</td>
-                                <td>{$row['tanggal_pemesanan']}</td>
-                              </tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    <?php elseif ($role === "pelanggan"): ?>
-        <!-- Pelanggan Dashboard -->
-        <h4>Selamat datang di Dashboard Pelanggan</h4>
-        <p>Pilih menu favorit kamu dan lakukan pemesanan!</p>
-
-        <!-- Tabel Menu -->
-        <div class="card">
-            <div class="card-header">
-                <h4>Menu Tersedia</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Nama Menu</th>
-                            <th>Kategori</th>
-                            <th>Harga</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        // Query untuk mengambil menu dari database
-                        $query = "SELECT * FROM menu";
-                        $result = mysqli_query($conn, $query);
-
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo "<tr>
-                                <td>{$row['nama']}</td>
-                                <td>{$row['kategori']}</td>
-                                <td>Rp " . number_format($row['harga'], 0, ',', '.') . "</td>
-                                <td><a href='order.php?menu_id={$row['menu_id']}' class='btn btn-primary btn-sm'>Pesan</a></td>
-                              </tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    <?php endif; ?>
-
-</div>
-<!-- /Dashboard -->
-<?php include(".layouts/footer.php"); ?>
