@@ -1,5 +1,5 @@
 <?php
-require_once('.includes/init_session.php');
+
 
 include('.includes/header.php');
 $title = "Manajemen Menu";
