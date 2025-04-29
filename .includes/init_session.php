@@ -1,6 +1,6 @@
 <?php
 session_start();
-//
+
 $userId = $_SESSION["user_id"];  
 $nama = $_SESSION["nama"];
 
@@ -16,5 +16,5 @@ if (empty($_SESSION["user_id"])) {
     ];
     header('Location: ./auth/login.php');  
     exit(); 
-}
+} //
 ?>

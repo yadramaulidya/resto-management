@@ -47,7 +47,7 @@
       </li>
     <?php endif; ?>
 
-    <!-- Menu Pelangan -->
+    <!-- Menu Pelanggan -->
     <?php if ($_SESSION['role'] === 'pelanggan'): ?>
       <li class="menu-header small text-uppercase"><span class="menu-header-text">Fitur Pelanggan</span></li>
       <li class="menu-item">
