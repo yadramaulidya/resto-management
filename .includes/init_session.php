@@ -1,6 +1,6 @@
 <?php
 session_start();
-
+//
 $userId = $_SESSION["user_id"];  
 $nama = $_SESSION["nama"];
 
