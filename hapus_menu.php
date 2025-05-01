@@ -1,5 +1,4 @@
 <?php
-require_once('.includes/init_session.php'); 
 require_once('config.php');
 
 // Memeriksa apakah parameter 'id' ada di URL

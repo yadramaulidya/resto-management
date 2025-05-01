@@ -1,6 +1,5 @@
 <?php
 require_once('config.php'); 
-require_once('.includes/init_session.php');
 
 
 $id = $_GET['id'];
