@@ -1,27 +1,24 @@
-<?php 
-session_start(); ?>
-<?php include(".layouts/header.php"); ?>
+<?php
+    session_start();
+
+$notification = $_SESSION['notification'] ?? null;
+unset($_SESSION['notification']);
+
+include("./.layouts/header.php"); 
+?>
 
 <!-- Login Card -->
 <div class="card">
   <div class="card-body">
     <!-- Logo -->
     <div class="app-brand justify-content-center">
-      <a href="index.html" class="app-brand-link gap-2">
+      <a href="../index.php" class="app-brand-link gap-2">
         <span class="app-brand-logo demo"></span>
         <span class="app-brand-text demo text-uppercase fw-bolder">BiteNest 🍖</span>
       </a>
     </div>
     
     <h4 class="mb-2">Selamat datang kembali! Masukkan informasi login Anda.</h4>
-
-    <!-- Cek apakah ada notifikasi -->
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $_SESSION['error_message']; ?>
-        </div>
-        <?php unset($_SESSION['error_message']); ?>
-    <?php endif; ?>
 
     <!-- Form Login -->
     <form action="login_auth.php" method="POST">
@@ -47,4 +44,4 @@ session_start(); ?>
 </div>
 <!-- /Login Card -->
 
-<?php include(".layouts/footer.php"); ?>
+<?php include("./.layouts/footer.php"); // Pastikan path benar ?>
