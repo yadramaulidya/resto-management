@@ -1,11 +1,20 @@
-<?php include(".layouts/header.php"); ?>
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+$notification = $_SESSION['notification'] ?? null;
+unset($_SESSION['notification']); 
+
+include("./.layouts/header.php"); 
+?>
 
 <!-- Register Card -->
 <div class="card">
   <div class="card-body">
     <!-- Logo -->
     <div class="app-brand justify-content-center">
-      <a href="index.html" class="app-brand-link gap-2">
+      <a href="../index.php" class="app-brand-link gap-2">
         <span class="app-brand-logo demo"></span>
         <span class="app-brand-text demo text-uppercase fw-bolder">BiteNest 🍖</span>
       </a>
@@ -13,13 +22,7 @@
     
     <h4 class="mb-2">Daftar untuk membuat akun baru</h4>
 
-    <!-- Cek apakah ada notifikasi -->
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $_SESSION['error_message']; ?>
-        </div>
-        <?php unset($_SESSION['error_message']); ?>
-    <?php endif; ?>
+    
 
     <!-- Form Register -->
     <form action="register_process.php" method="POST">
@@ -50,8 +53,9 @@
       <span>Sudah punya akun?</span>
       <a href="login.php"><span> Mari masuk</span></a>
     </p>
+
   </div>
 </div>
 <!-- /Register Card -->
 
-<?php include(".layouts/footer.php"); ?>
+<?php include("./.layouts/footer.php"); // Pastikan path benar ?>
