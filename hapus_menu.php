@@ -1,23 +1,39 @@
 <?php
 require_once('config.php');
+session_start();
 
-// Memeriksa apakah parameter 'id' ada di URL
-if (isset($_GET['id'])) {
-    $id_menu = $_GET['id'];
-
-    // Query untuk menghapus menu berdasarkan ID
-    $query = "DELETE FROM menu WHERE menu_id = '$id_menu'";
-
-    // Eksekusi query
-    if (mysqli_query($conn, $query)) {
-        $_SESSION['notification'] = ['type' => 'success', 'message' => 'Menu berhasil dihapus!'];
-    } else {
-        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Gagal menghapus menu! Query error: ' . mysqli_error($conn)];
-    }
-} else {
-    $_SESSION['notification'] = ['type' => 'danger', 'message' => 'ID menu tidak ditemukan!'];
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ ID menu tidak ditemukan!'];
+    header('Location: menu.php');
+    exit();
 }
 
-header('Location: menu.php');
-exit;
-?>
+$id_menu = intval($_GET['id']);
+
+try {
+    $check_query = "SELECT COUNT(*) AS count FROM pesanan WHERE menu_id = ?";
+    $check_stmt = $conn->prepare($check_query);
+    $check_stmt->bind_param("i", $id_menu);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    $row = $check_result->fetch_assoc();
+
+    if ($row['count'] > 0) {
+        throw new Exception('yah,menunya gabisa dihapus nih karena terlibat dalam pemesanan!');
+    }
+
+    $query = "DELETE FROM menu WHERE menu_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $id_menu);
+
+    if ($stmt->execute()) {
+        $_SESSION['notification'] = ['type' => 'success', 'message' => 'yey, menu berhasil dihapus!'];
+    } else {
+        throw new Exception('⚠️ gagal menghapus menu! error: ' . $stmt->error);
+    }
+} catch (Exception $e) {
+    $_SESSION['notification'] = ['type' => 'danger', 'message' => $e->getMessage()];
+}
+
+header("Location: menu.php");
+exit();
