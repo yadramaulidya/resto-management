@@ -1,28 +1,44 @@
 <?php
 require_once('config.php');
+session_start(); 
 
 $title = "Ubah Status Pesanan";
-$pesanan_id = $_GET['pesanan_id'];
+if (!isset($_GET['pesanan_id']) || empty($_GET['pesanan_id'])) {
+    $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ ID Pesanan tidak ditemukan!'];
+    header('Location: pesanan.php');
+    exit();
+}
+
+$pesanan_id = intval($_GET['pesanan_id']); 
+
 $query = "SELECT pesanan.*, menu.nama AS menu_name, users.nama AS user_name
           FROM pesanan
           JOIN menu ON pesanan.menu_id = menu.menu_id
           JOIN users ON pesanan.user_id = users.user_id
-          WHERE pesanan.pesanan_id = $pesanan_id";
-$pesanan = mysqli_query($conn, $query);
-$row = mysqli_fetch_assoc($pesanan);
+          WHERE pesanan.pesanan_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $pesanan_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $status = $_POST['status'];
+    $status = trim($_POST['status']);
 
-    // Update status pesanan di database
-    $query = "UPDATE pesanan SET status = '$status' WHERE pesanan_id = $pesanan_id";
-    if (mysqli_query($conn, $query)) {
-        $_SESSION['notification'] = ['type' => 'success', 'message' => 'Status pesanan berhasil diubah!'];
-        header('Location: pesanan.php');
-        exit;
-    } else {
-        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Gagal mengubah status pesanan!'];
+    try {
+        $query_update = "UPDATE pesanan SET status = ? WHERE pesanan_id = ?";
+        $stmt_update = $conn->prepare($query_update);
+        $stmt_update->bind_param("si", $status, $pesanan_id);
+
+        if ($stmt_update->execute()) {
+            $_SESSION['notification'] = ['type' => 'success', 'message' => '✅ Status pesanan berhasil diubah menjadi ' . htmlspecialchars($status) . '!'];
+        } else {
+            throw new Exception('⚠️ Gagal mengubah status pesanan!');
+        }
+    } catch (Exception $e) {
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => $e->getMessage()];
     }
+    header('Location: pesanan.php'); 
 }
 
 include('.includes/header.php');
@@ -32,9 +48,10 @@ include('.includes/toast_notification.php');
 <div class="container-xxl flex-grow-1 container-p-y">
   <h1 class="my-4">Ubah Status Pesanan</h1>
 
+  <!-- Menampilkan Notifikasi dengan Warna Coklat -->
   <?php if (isset($_SESSION['notification'])): ?>
-    <div class="alert alert-<?php echo $_SESSION['notification']['type']; ?>" role="alert">
-      <?php echo $_SESSION['notification']['message']; ?>
+    <div class="alert text-center" style="background-color: #8B4513; color: white;">
+      <?= $_SESSION['notification']['message']; ?>
     </div>
     <?php unset($_SESSION['notification']); ?>
   <?php endif; ?>
@@ -53,12 +70,12 @@ include('.includes/toast_notification.php');
         <div class="mb-3">
           <label for="status" class="form-label">Status Pesanan</label>
           <select class="form-select" id="status" name="status" required>
-            <option value="pending" <?= $row['status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
-            <option value="proses" <?= $row['status'] == 'proses' ? 'selected' : ''; ?>>Proses</option>
-            <option value="selesai" <?= $row['status'] == 'selesai' ? 'selected' : ''; ?>>Selesai</option>
+            <option value="PENDING" <?= $row['status'] == 'PENDING' ? 'selected' : ''; ?>>Pending</option>
+            <option value="PROSES" <?= $row['status'] == 'PROSES' ? 'selected' : ''; ?>>Proses</option>
+            <option value="SELESAI" <?= $row['status'] == 'SELESAI' ? 'selected' : ''; ?>>Selesai</option>
           </select>
         </div>
-        <button type="submit" class="btn btn-primary">Ubah Status</button>
+        <button type="submit" class="btn btn-primary w-100">Ubah Status</button>
       </form>
     </div>
   </div>
