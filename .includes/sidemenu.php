@@ -71,7 +71,7 @@
     <?php endif; ?>
 
     <li class="menu-item">
-      <a href="logout.php" class="menu-link">
+      <a href="auth/logout.php" class="menu-link">
         <i class="menu-icon tf-icons bx bx-log-out"></i>
         <div>Logout</div>
       </a>
