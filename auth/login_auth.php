@@ -1,33 +1,37 @@
 <?php
-session_start();
-require_once("../config.php");
+    session_start();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST["username"];
-    $password = $_POST["password"];
+require_once('../config.php'); 
 
-    $query = "SELECT user_id, nama, username, password, role FROM users WHERE username = '$username'";
-    $result = mysqli_query($conn, $query);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    if ($result) {
-        $user = mysqli_fetch_assoc($result);
+    $query = "SELECT user_id, nama, username, password, role FROM users WHERE username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        if ($user && password_verify($password, $user['password'])) {
-    
-            $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['nama'] = $user['nama'];
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
 
-            header("Location: ../dashboard.php");
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['user_id'];  
+            $_SESSION['username'] = $user['username']; 
+            $_SESSION['nama'] = $user['nama']; 
+            $_SESSION['role'] = $user['role']; 
+  
+            header('Location: ../dashboard.php');
             exit();
         } else {
-            $_SESSION['error_message'] = "Password salah!";
-            header("Location: login.php");
+            $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Username atau password salah!'];
+            header('Location: login.php');
             exit();
         }
     } else {
-        $_SESSION['error_message'] = "Username tidak ditemukan!";
-        header("Location: login.php");
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Username tidak ditemukan!'];
+        header('Location: login.php');
         exit();
     }
 }
