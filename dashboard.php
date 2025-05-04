@@ -12,7 +12,6 @@ $nama = $_SESSION["nama"];
 
 // Query untuk total pendapatan, transaksi, dan jumlah pelanggan untuk admin
 if ($role === 'admin') {
-    // Query untuk total transaksi dan pendapatan
     $query_transaksi = "
         SELECT COUNT(p.pesanan_id) AS total_orders, SUM(m.harga * p.jumlah) AS total_revenue
         FROM pesanan p
@@ -66,81 +65,54 @@ if ($role === 'admin') {
 
         <!-- Kartu Statistik -->
         <div class="row mb-4">
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card shadow-sm">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Transaksi</span>
-                        <h3 class="card-title mb-2">Rp<?= number_format($total_revenue, 0, ',', '.') ?></h3>
+                        <h3 class="card-title mb-2">Rp14.857.000</h3>
                         <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +28,14%</small>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card shadow-sm">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pendapatan</span>
-                        <h3 class="card-title mb-2">Rp<?= number_format($total_revenue, 0, ',', '.') ?></h3>
+                        <h3 class="card-title mb-2">Rp8.350.000</h3>
                         <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +18,2%</small>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card shadow-sm">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pelanggan</span>
-                        <h3 class="card-title mb-2"><?= $total_customers ?></h3>
+                        <h3 class="card-title mb-2">245</h3>
                         <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +12,5%</small>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card shadow-sm">
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pesanan</span>
-                        <h3 class="card-title mb-2"><?= $total_orders ?></h3>
+                        <h3 class="card-title mb-2">178</h3>
                         <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +32,7%</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Grafik Status Pesanan dan Pendapatan -->
-        <div class="row mb-4">
-            <!-- Grafik Status Pesanan -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h4>Distribusi Status Pesanan</h4>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="statusChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Grafik Pendapatan dan Transaksi -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-header">
-                        <h4>Pendapatan dan Transaksi</h4>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Tabel Pesanan Terbaru -->
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-header">
                 <h4>Daftar Pesanan Terbaru</h4>
             </div>
             <div class="card-body">
-                <table class="table table-hover table-striped" id="pesananTable">
+                <table class="table table-bordered table-striped table-hover" id="pesananTable">
                     <thead>
                         <tr>
                             <th>Nama Pelanggan</th>
@@ -188,7 +160,7 @@ if ($role === 'admin') {
                                     <td>{$row['jumlah']}</td>
                                     <td><span class='$statusClass'>{$statusText}</span></td>
                                     <td>{$row['tanggal_pemesanan']}</td>
-                                    <td><a href='ubah_status.php?pesanan_id={$row['pesanan_id']}' class='btn btn-sm btn-primary'>Detail</a></td>
+                                    <td><button class='btn btn-sm btn-primary'>Detail</button></td>
                                   </tr>";
                         }
                         ?>
@@ -200,65 +172,19 @@ if ($role === 'admin') {
 
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Grafik Status Pesanan
-var ctx1 = document.getElementById('statusChart').getContext('2d');
-var statusChart = new Chart(ctx1, {
-    type: 'bar',
-    data: {
-        labels: ['Pending', 'Proses', 'Selesai'],
-        datasets: [{
-            label: 'Status Pesanan',
-            data: [
-                <?php echo isset($status_pesanan['pending']) ? $status_pesanan['pending'] : 0; ?>,
-                <?php echo isset($status_pesanan['proses']) ? $status_pesanan['proses'] : 0; ?>,
-                <?php echo isset($status_pesanan['selesai']) ? $status_pesanan['selesai'] : 0; ?>
-            ],
-            backgroundColor: ['#FF7F50', '#3B5998', '#4CAF50'],
-            borderColor: ['#FF7F50', '#3B5998', '#4CAF50'],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
-
-// Grafik Pendapatan dan Transaksi
-var ctx2 = document.getElementById('revenueChart').getContext('2d');
-var revenueChart = new Chart(ctx2, {
-    type: 'line',
-    data: {
-        labels: ['Januari', 'Februari', 'Maret', 'April', 'Mei'],
-        datasets: [{
-            label: 'Pendapatan',
-            data: [5000000, 6000000, 7000000, 8000000, 9000000], // Contoh data
-            fill: false,
-            borderColor: '#4CAF50',
-            tension: 0.1
-        }, {
-            label: 'Transaksi',
-            data: [100, 120, 150, 170, 200], // Contoh data transaksi
-            fill: false,
-            borderColor: '#FF7F50',
-            tension: 0.1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
-    }
-});
+    // Inisialisasi DataTable
+    $(document).ready(function() {
+        $('#pesananTable').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "pageLength": 10
+        });
+    });
 </script>
