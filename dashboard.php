@@ -1,322 +1,234 @@
-dashboard-admin
-<?php 
+<?php
 session_start();
 require_once("config.php");
 
+// Pastikan pengguna sudah login
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit();
 }
 
-$role = $_SESSION["role"];
-$nama = $_SESSION["nama"];
+$role    = $_SESSION["role"];
+$user_id = $_SESSION["user_id"];
+$nama    = $_SESSION["nama"];
 
-// Query untuk total pendapatan, transaksi, dan jumlah pelanggan untuk admin
-if ($role === 'admin') {
-    $query_transaksi = "
-        SELECT COUNT(p.pesanan_id) AS total_orders, SUM(m.harga * p.jumlah) AS total_revenue
-        FROM pesanan p
-        JOIN menu m ON p.menu_id = m.menu_id
-    ";
-    $result_transaksi = mysqli_query($conn, $query_transaksi);
-    $data_transaksi = mysqli_fetch_assoc($result_transaksi);
+include("./.includes/header.php");
 
-    $total_revenue = $data_transaksi['total_revenue'];
-    $total_orders = $data_transaksi['total_orders'];
+// Jika role admin, ambil data untuk kartu statistik secara otomatis
+if ($role === "admin") {
+    // Total revenue (asumsi: revenue = SUM(menu.harga * pesanan.jumlah))
+    $query_revenue = "SELECT SUM(m.harga * p.jumlah) AS total_revenue 
+                      FROM pesanan p 
+                      JOIN menu m ON p.menu_id = m.menu_id";
+    $result_revenue = mysqli_query($conn, $query_revenue);
+    $data_revenue = mysqli_fetch_assoc($result_revenue);
+    $total_revenue = $data_revenue['total_revenue'] ?? 0;
 
-    // Query untuk jumlah pelanggan
-    $query_pelanggan = "SELECT COUNT(user_id) AS total_customers FROM users";
-    $result_pelanggan = mysqli_query($conn, $query_pelanggan);
-    $data_pelanggan = mysqli_fetch_assoc($result_pelanggan);
-    $total_customers = $data_pelanggan['total_customers'];
+    // Total orders (jumlah pesanan)
+    $query_orders = "SELECT COUNT(pesanan_id) AS total_orders FROM pesanan";
+    $result_orders = mysqli_query($conn, $query_orders);
+    $data_orders = mysqli_fetch_assoc($result_orders);
+    $total_orders = $data_orders['total_orders'] ?? 0;
 
-    // Query untuk pesanan terbaru
-    $query_pesanan_terbaru = "SELECT * FROM pesanan ORDER BY tanggal_pemesanan DESC LIMIT 5";
-    $result_pesanan_terbaru = mysqli_query($conn, $query_pesanan_terbaru);
-    $pesanan_terbaru = [];
-    while ($row = mysqli_fetch_assoc($result_pesanan_terbaru)) {
-        $pesanan_terbaru[] = $row;
-    }
-
-    // Query untuk status pesanan
-    $query_status_pesanan = "
-        SELECT status, COUNT(pesanan_id) AS total 
-        FROM pesanan
-        GROUP BY status
-    ";
-    $result_status_pesanan = mysqli_query($conn, $query_status_pesanan);
-    $status_pesanan = [];
-    while ($row = mysqli_fetch_assoc($result_status_pesanan)) {
-        $status_pesanan[$row['status']] = $row['total'];
-    }
+    // Total customers
+    $query_customers = "SELECT COUNT(user_id) AS total_customers FROM users";
+    $result_customers = mysqli_query($conn, $query_customers);
+    $data_customers = mysqli_fetch_assoc($result_customers);
+    $total_customers = $data_customers['total_customers'] ?? 0;
 }
-
 ?>
 
-<?php include("./.includes/header.php"); ?>
-
-<!-- Dashboard -->
-<div class="container-xxl flex-grow-1 container-p-y">
-    <h2>Hai, <?= htmlspecialchars($nama) ?>!</h2>
-<?php
-session_start();
-require_once('config.php');
-include('.includes/header.php');
-
-if (!isset($_SESSION['role'])) {
-    header('Location: login.php');
-    exit;
+<!-- Custom CSS untuk membuat tabel dengan hanya garis horizontal -->
+<style>
+.table-custom {
+    border-collapse: collapse;
+    width: 100%;
 }
+.table-custom thead th {
+    border-bottom: 2px solid #dee2e6;
+    padding: 0.75rem;
+    vertical-align: middle;
+    text-align: left;
+}
+.table-custom tbody td {
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+.table-custom tbody tr:last-child td {
+    border-bottom: none;
+}
+</style>
 
-$title = "Dashboard";
+<div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Dashboard Pelanggan -->
+    <?php if ($role === "pelanggan"): ?>
+        <!-- Tabel Ringkasan Pesanan Terbaru untuk Pelanggan -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Riwayat Pesanan Terbaru</h4>
+            </div>
+            <div class="card-body">
+                <?php
+                // Ambil 5 pesanan terakhir milik pelanggan
+                $query = "SELECT p.pesanan_id, m.nama AS menu, p.jumlah, p.status, p.tanggal_pemesanan 
+                          FROM pesanan p 
+                          JOIN menu m ON p.menu_id = m.menu_id 
+                          WHERE p.user_id = ? 
+                          ORDER BY p.tanggal_pemesanan DESC 
+                          LIMIT 5";
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                ?>
+                <?php if ($result->num_rows > 0): ?>
+                    <table class="table-custom table-striped">
+                        <thead>
+                            <tr>
+                                <th>Menu</th>
+                                <th>Jumlah</th>
+                                <th>Status</th>
+                                <th>Tanggal Pemesanan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = $result->fetch_assoc()) : ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row["menu"]); ?></td>
+                                <td><?= $row["jumlah"]; ?></td>
+                                <td>
+                                    <?php
+                                    switch ($row["status"]) {
+                                        case 'pending':
+                                            echo '<span class="badge bg-warning text-dark">Pending</span>';
+                                            break;
+                                        case 'proses':
+                                            echo '<span class="badge bg-info text-white">Proses</span>';
+                                            break;
+                                        case 'selesai':
+                                            echo '<span class="badge bg-success text-white">Selesai</span>';
+                                            break;
+                                        default:
+                                            echo '<span class="badge bg-secondary text-white">Unknown</span>';
+                                            break;
+                                    }
+                                    ?>
+                                </td>
+                                <td><?= htmlspecialchars($row["tanggal_pemesanan"]); ?></td>
+                                <td>
+                                    <a href="detail_pesanan.php?pesanan_id=<?= $row["pesanan_id"]; ?>" class="btn btn-sm btn-info">Detail</a>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p>Belum ada pesanan yang dilakukan.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <!-- Tombol menuju halaman pemesanan menu -->
+        <div class="text-end">
+            <a href="menu.php" class="btn btn-primary">
+                <i class="bx bx-food-menu me-1"></i> Pesan Menu Sekarang
+            </a>
+        </div>
+    <?php endif; ?>
 
-// klau admin
-if ($_SESSION['role'] === 'admin') {
- main
-
-    // ringkasan pesanan pending
-    $query_pesanan = "SELECT COUNT(*) AS total_pesanan FROM pesanan WHERE status = 'pending'";
-    $pesanan_result = mysqli_query($conn, $query_pesanan);
-    $pesanan_data = mysqli_fetch_assoc($pesanan_result);
-
-dashboard-admin
-        <!-- Kartu Statistik -->
+    <!-- Dashboard Admin -->
+    <?php if ($role === "admin"): ?>
+        <!-- Kartu Statistik untuk Admin menggunakan data otomatis -->
         <div class="row mb-4">
             <div class="col-md-3 col-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Transaksi</span>
-                        <h3 class="card-title mb-2">Rp14.857.000</h3>
-                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +28,14%</small>
+                        <h3 class="card-title mb-2">Rp <?= number_format($total_revenue, 0, ',', '.'); ?></h3>
+                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> Auto</small>
                     </div>
                 </div>
             </div>
-            
             <div class="col-md-3 col-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pendapatan</span>
-                        <h3 class="card-title mb-2">Rp8.350.000</h3>
-                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +18,2%</small>
+                        <h3 class="card-title mb-2">Rp <?= number_format($total_revenue, 0, ',', '.'); ?></h3>
+                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> Auto</small>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-3 col-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pelanggan</span>
-                        <h3 class="card-title mb-2">245</h3>
-                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +12,5%</small>
-
-    // menu terlaku
-    $query_menu_terlaris = "SELECT menu.nama, SUM(pesanan.jumlah) AS total_terjual
-                            FROM pesanan
-                            JOIN menu ON pesanan.menu_id = menu.menu_id
-                            GROUP BY menu.menu_id
-                            ORDER BY total_terjual DESC LIMIT 1";
-    $menu_terlaris_result = mysqli_query($conn, $query_menu_terlaris);
-    $menu_terlaris = mysqli_fetch_assoc($menu_terlaris_result);
-
-    ?>
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <h1 class="my-4">Dashboard Admin</h1>
-
-        <div class="row">
-            <!-- Ringkasan Pesanan -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pesanan Pending</h5>
-                        <p class="card-text"><?php echo $pesanan_data['total_pesanan']; ?> pesanan pending</p>
-                        <a href="pesanan.php" class="btn btn-primary">Lihat Pesanan</a>
-main
+                        <h3 class="card-title mb-2"><?= $total_customers; ?></h3>
+                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> Auto</small>
                     </div>
                 </div>
             </div>
-
- dashboard-admin
             <div class="col-md-3 col-6 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <span class="fw-semibold d-block mb-1">Pesanan</span>
-                        <h3 class="card-title mb-2">178</h3>
-                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> +32,7%</small>
+                        <h3 class="card-title mb-2"><?= $total_orders; ?></h3>
+                        <small class="text-success fw-semibold"><i class="bx bx-up-arrow-alt"></i> Auto</small>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Tabel Pesanan Terbaru -->
+        
+        <!-- Tabel Ringkasan Pesanan untuk Admin (Summary) -->
+        <?php
+        // Query untuk mendapatkan ringkasan pesanan berdasarkan menu
+        $query_admin = "
+            SELECT m.menu_id, m.nama AS menu, 
+                   COUNT(p.pesanan_id) AS total_orders, 
+                   SUM(p.jumlah) AS total_quantity, 
+                   SUM(m.harga * p.jumlah) AS total_revenue
+            FROM pesanan p
+            JOIN menu m ON p.menu_id = m.menu_id
+            GROUP BY m.menu_id
+        ";
+        $result_admin = mysqli_query($conn, $query_admin);
+        ?>
         <div class="card">
             <div class="card-header">
-                <h4>Daftar Pesanan Terbaru</h4>
+                <h4>Ringkasan Pesanan</h4>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-striped table-hover" id="pesananTable">
-                    <thead>
-                        <tr>
-                            <th>Nama Pelanggan</th>
-                            <th>Menu</th>
-                            <th>Jumlah</th>
-                            <th>Status</th>
-                            <th>Tanggal Pemesanan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        // Query untuk mengambil pesanan dari database
-                        $query = "SELECT p.pesanan_id, u.nama AS pelanggan, m.nama AS menu, p.jumlah, p.status, p.tanggal_pemesanan 
-                                  FROM pesanan p 
-                                  JOIN users u ON p.user_id = u.user_id 
-                                  JOIN menu m ON p.menu_id = m.menu_id";
-                        $result = mysqli_query($conn, $query);
-
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            // Menentukan warna status berdasarkan status pesanan
-                            $statusClass = "";
-                            $statusText = "";
-                            switch ($row['status']) {
-                                case 'pending':
-                                    $statusClass = 'badge bg-warning text-dark'; // Pending
-                                    $statusText = 'Pending';
-                                    break;
-                                case 'proses':
-                                    $statusClass = 'badge bg-info text-white'; // Proses
-                                    $statusText = 'Proses';
-                                    break;
-                                case 'selesai':
-                                    $statusClass = 'badge bg-success text-white'; // Selesai
-                                    $statusText = 'Selesai';
-                                    break;
-                                default:
-                                    $statusClass = 'badge bg-secondary text-white'; // Default
-                                    $statusText = 'Unknown';
-                                    break;
-                            }
-                            echo "<tr>
-                                    <td>{$row['pelanggan']}</td>
-                                    <td>{$row['menu']}</td>
-                                    <td>{$row['jumlah']}</td>
-                                    <td><span class='$statusClass'>{$statusText}</span></td>
-                                    <td>{$row['tanggal_pemesanan']}</td>
-                                    <td><button class='btn btn-sm btn-primary'>Detail</button></td>
-                                  </tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
+                <?php if (mysqli_num_rows($result_admin) > 0): ?>
+                    <table class="table-custom table-striped">
+                        <thead>
+                            <tr>
+                                <th>Menu</th>
+                                <th>Total Orders</th>
+                                <th>Total Quantity</th>
+                                <th>Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = mysqli_fetch_assoc($result_admin)): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($row["menu"]); ?></td>
+                                    <td><?= $row["total_orders"]; ?></td>
+                                    <td><?= $row["total_quantity"]; ?></td>
+                                    <td>Rp <?= number_format($row["total_revenue"], 0, ',', '.'); ?></td>
+                                </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?>
+                    <p>Tidak ada pesanan.</p>
+                <?php endif; ?>
             </div>
         </div>
     <?php endif; ?>
-
 </div>
 
-<!-- DataTables JS -->
+<!-- Hanya Bootstrap JS (tanpa plugin tambahan) -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-    // Inisialisasi DataTable
-    $(document).ready(function() {
-        $('#pesananTable').DataTable({
-            "paging": true,
-            "searching": true,
-            "ordering": true,
-            "pageLength": 10
-        });
-    });
-</script>
-
-            <!-- Menu Terlaris -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Menu Terlaris</h5>
-                        <p class="card-text"><?php echo $menu_terlaris['nama']; ?> - Terjual <?php echo $menu_terlaris['total_terjual']; ?> kali</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Status Pesanan -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pesanan yang Sedang Diproses</h5>
-                        <p class="card-text">Status pesanan akan ditampilkan di sini.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php
-} else if ($_SESSION['role'] === 'pelanggan') {
-    // kalau pelanggan
-
-    $user_id = $_SESSION['user_id'];
-    // ambil pesNAN dr pelanghgan
-    $query_pesanan = "SELECT COUNT(*) AS total_pesanan_pending FROM pesanan WHERE user_id = '$user_id' AND status = 'pending'";
-    $pesanan_result = mysqli_query($conn, $query_pesanan);
-    $pesanan_data = mysqli_fetch_assoc($pesanan_result);
-
-    //ambil riwayat pesanan pelanggan
-    $query_riwayat = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama as menu_name
-                      FROM pesanan
-                      JOIN menu ON pesanan.menu_id = menu.menu_id
-                      WHERE pesanan.user_id = '$user_id'";
-    $riwayat_pesanan = mysqli_query($conn, $query_riwayat);
-    ?>
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <h1 class="my-4">Dashboard Pelanggan</h1>
-
-        <div class="row">
-            <!-- Ringkasan Pesanan Pending -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Pesanan Pending</h5>
-                        <p class="card-text"><?php echo $pesanan_data['total_pesanan_pending']; ?> pesanan pending</p>
-                        <a href="pesan_menu.php" class="btn btn-primary">Pesan Sekarang</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Riwayat Pesanan -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Riwayat Pesanan</h5>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Menu</th>
-                                    <th>Jumlah</th>
-                                    <th>Status</th>
-                                    <th>Tanggal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php while ($row = mysqli_fetch_assoc($riwayat_pesanan)): ?>
-                                    <tr>
-                                        <td><?php echo $row['pesanan_id']; ?></td>
-                                        <td><?php echo $row['menu_name']; ?></td>
-                                        <td><?php echo $row['jumlah']; ?></td>
-                                        <td><?php echo ucfirst($row['status']); ?></td>
-                                        <td><?php echo $row['tanggal_pemesanan']; ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php
-}
-include('.includes/footer.php');
-?>
- main
+<?php include("./.includes/footer.php"); ?>
