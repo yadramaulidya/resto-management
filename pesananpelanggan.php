@@ -3,16 +3,13 @@ require_once('config.php');
 include('.includes/header.php');
 include('.includes/toast_notification.php');
 
-$title = "Riwayat Pesanan"; // Variabel $title dapat tetap digunakan untuk judul browser/tab jika diperlukan
-
-// Ambil ID pelanggan dari session
+$title = "Pesanan Aktif";
 $user_id = $_SESSION['user_id'];
 
-// Query untuk mengambil pesanan dengan status 'selesai'
 $query = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama AS menu_name
           FROM pesanan
           JOIN menu ON pesanan.menu_id = menu.menu_id
-          WHERE pesanan.user_id = ? AND pesanan.status = 'selesai'
+          WHERE pesanan.user_id = ? AND pesanan.status IN ('pending', 'proses')
           ORDER BY pesanan.tanggal_pemesanan DESC";
 
 $stmt = $conn->prepare($query);
@@ -39,12 +36,10 @@ $pesanan = $stmt->get_result();
 </style>
 
 <div class="container-xxl flex-grow-1 container-p-y">
-  <!-- Header untuk konten utama dihapus sehingga tidak tampil "Riwayat Pesanan" -->
-
   <div class="card shadow-sm">
     <!-- Card header dengan styling light netral -->
     <div class="card-header bg-light text-dark">
-      <h5 class="mb-0 fw-bold">Pesanan Selesai</h5>
+      <h5 class="mb-0 fw-bold">Pesanan Aktif</h5>
     </div>
     <div class="card-body">
       <?php if ($pesanan->num_rows > 0): ?>
@@ -73,7 +68,7 @@ $pesanan = $stmt->get_result();
         </table>
       </div>
       <?php else: ?>
-      <p class="text-center text-muted">Tidak ada riwayat pesanan.</p>
+      <p class="text-center text-muted">Tidak ada pesanan aktif.</p>
       <?php endif; ?>
     </div>
   </div>

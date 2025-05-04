@@ -12,7 +12,6 @@ if (isset($_SESSION['notification'])) {
 include('./.includes/toast_notification.php');
 
 $selected_status = isset($_GET['status']) ? $_GET['status'] : "";
-
 $query = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama AS menu_name, users.nama AS user_name
           FROM pesanan
           JOIN menu ON pesanan.menu_id = menu.menu_id
