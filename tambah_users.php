@@ -2,27 +2,26 @@
 session_start();
 require_once('config.php');
 
-// --- PROSES POST ---
-// Logika penambahan user dilakukan sebelum mengirim output apa pun
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama     = trim($_POST['nama']);
     $kontak   = trim($_POST['kontak']);
     $username = trim($_POST['username']);
-    // Hash password untuk keamanan
     $password = password_hash(trim($_POST['password']), PASSWORD_DEFAULT);
     $role     = trim($_POST['role']);
 
     $query = "INSERT INTO users (nama, kontak, username, password, role) VALUES (?, ?, ?, ?, ?)";
     if ($stmt = $conn->prepare($query)) {
         $stmt->bind_param("sssss", $nama, $kontak, $username, $password, $role);
+    
+        $redirectUrl = '';
+
         try {
             $stmt->execute();
             $_SESSION['notification'] = [
                 'type'    => 'success',
                 'message' => "User successfully added!"
             ];
-            header("Location: users.php");
-            exit;
+            $redirectUrl = "users.php";
         } catch (mysqli_sql_exception $e) {
             if ($e->getCode() == 1062) { // Duplicate entry
                 $_SESSION['notification'] = [
@@ -35,10 +34,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     'message' => "Error: " . $e->getMessage()
                 ];
             }
-            header("Location: tambah_users.php");
-            exit;
+            $redirectUrl = "tambah_users.php";
         }
+        
+        // Tutup statement sebelum redirect
         $stmt->close();
+        
+        header("Location: $redirectUrl");
+        exit;
     } else {
         $_SESSION['notification'] = [
             'type'    => 'danger',
@@ -50,10 +53,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 include('.includes/header.php');
-
-include('.includes/toast_notification.php'); 
+include('.includes/toast_notification.php');
 ?>
-
 
 <!-- Konten HTML halaman (setelah proses POST selesai) -->
 <div class="container-xxl flex-grow-1 my-4">
@@ -90,6 +91,7 @@ include('.includes/toast_notification.php');
         <button type="submit" class="btn btn-primary">Add User</button>
     </form>
 </div>
+
 <?php 
-include('.includes/footer.php'); 
+include('.includes/footer.php');
 ?>
