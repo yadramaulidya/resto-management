@@ -3,7 +3,7 @@ require_once('config.php');
 include('./.includes/header.php');
 $title = "Menu untuk Pelanggan";
 
-
+// Prepared statement untuk mengambil semua menu
 $query = "SELECT * FROM menu";
 $stmt = $conn->prepare($query);
 $stmt->execute();
