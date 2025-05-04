@@ -1,29 +1,61 @@
 <?php
-ob_start();
 session_start();
-include('config.php');
-include('.includes/header.php');
+require_once('config.php');
 
-// Pastikan tidak ada output sebelum header()
+// --- PROSES POST ---
+// Logika penambahan user dilakukan sebelum mengirim output apa pun
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nama = $_POST['nama'];
-    $kontak = $_POST['kontak'];
-    $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = $_POST['role'];
+    $nama     = trim($_POST['nama']);
+    $kontak   = trim($_POST['kontak']);
+    $username = trim($_POST['username']);
+    // Hash password untuk keamanan
+    $password = password_hash(trim($_POST['password']), PASSWORD_DEFAULT);
+    $role     = trim($_POST['role']);
 
-    $query = "INSERT INTO users (nama, kontak, username, password, role) 
-              VALUES ('$nama', '$kontak', '$username', '$password', '$role')";
-
-    if (mysqli_query($conn, $query)) {
-        header("Location: users.php"); // Redirect setelah sukses
-        exit; // **Perbaikan**: Menghentikan eksekusi agar tidak ada output tambahan
+    $query = "INSERT INTO users (nama, kontak, username, password, role) VALUES (?, ?, ?, ?, ?)";
+    if ($stmt = $conn->prepare($query)) {
+        $stmt->bind_param("sssss", $nama, $kontak, $username, $password, $role);
+        try {
+            $stmt->execute();
+            $_SESSION['notification'] = [
+                'type'    => 'success',
+                'message' => "User successfully added!"
+            ];
+            header("Location: users.php");
+            exit;
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1062) { // Duplicate entry
+                $_SESSION['notification'] = [
+                    'type'    => 'danger',
+                    'message' => "Error: Username '$username' already exists. Please choose another."
+                ];
+            } else {
+                $_SESSION['notification'] = [
+                    'type'    => 'danger',
+                    'message' => "Error: " . $e->getMessage()
+                ];
+            }
+            header("Location: tambah_users.php");
+            exit;
+        }
+        $stmt->close();
     } else {
-        echo "Error: " . $query . "<br>" . mysqli_error($conn);
+        $_SESSION['notification'] = [
+            'type'    => 'danger',
+            'message' => "Error preparing statement: " . $conn->error
+        ];
+        header("Location: tambah_users.php");
+        exit;
     }
 }
+
+include('.includes/header.php');
+
+include('.includes/toast_notification.php'); 
 ?>
 
+
+<!-- Konten HTML halaman (setelah proses POST selesai) -->
 <div class="container-xxl flex-grow-1 my-4">
     <h1>Add New User</h1>
     <form method="POST" action="tambah_users.php">
@@ -58,5 +90,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <button type="submit" class="btn btn-primary">Add User</button>
     </form>
 </div>
-
-<?php include('.includes/footer.php'); ?>
+<?php 
+include('.includes/footer.php'); 
+?>
