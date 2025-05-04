@@ -1,82 +1,104 @@
 <?php
 session_start();
 require_once('config.php');
-include('.includes/header.php');
-include('.includes/toast_notification.php'); // Menampilkan notifikasi toast
 
-// Pastikan ID user tersedia
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+// Proses update jika form dikirim
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_GET['id']) && is_numeric($_GET['id'])) {
     $id = intval($_GET['id']);
 
-    // Ambil data pengguna
-    $query = "SELECT * FROM users WHERE user_id = ?";
+    // Ambil data dari form
+    $nama = trim($_POST['nama']);
+    $kontak = trim($_POST['kontak']);
+    $username = trim($_POST['username']);
+    $role = trim($_POST['role']);
+
+    // Query untuk memperbarui data pengguna di database
+    $query = "UPDATE users SET nama=?, kontak=?, username=?, role=? WHERE user_id=?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $id);
+    $stmt->bind_param("ssssi", $nama, $kontak, $username, $role, $id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
 
-    // Pastikan pengguna ditemukan
-    if (!$user) {
-        $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ User ID tidak ditemukan!'];
-        header("Location: users.php");
-        exit();
+    // Jika update berhasil, set notifikasi dan redirect
+    if ($stmt->affected_rows > 0) {
+        $_SESSION['notification'] = ['type' => 'success', 'message' => '✅ User berhasil diperbarui!'];
+    } else {
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠ Tidak ada perubahan data yang dilakukan!'];
     }
 
-    // Proses update jika form dikirim
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $nama = trim($_POST['nama']);
-        $kontak = trim($_POST['kontak']);
-        $username = trim($_POST['username']);
-        $role = trim($_POST['role']);
-
-        $update_query = "UPDATE users SET nama=?, kontak=?, username=?, role=? WHERE user_id=?";
-        $stmt_update = $conn->prepare($update_query);
-        $stmt_update->bind_param("ssssi", $nama, $kontak, $username, $role, $id);
-
-        if ($stmt_update->execute()) {
-            $_SESSION['notification'] = ['type' => 'success', 'message' => '✅ User berhasil diperbarui!'];
-            header("Location: users.php");
-            exit();
-        } else {
-            $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ Gagal memperbarui user!'];
-        }
-    }
-} else {
-    $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ User ID tidak ditemukan!'];
+    $stmt->close();
+    $conn->close();
     header("Location: users.php");
     exit();
 }
+
+// Pastikan ID pengguna tersedia dan valid
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠ ID pengguna tidak valid!'];
+    header("Location: users.php");
+    exit();
+}
+
+$id = intval($_GET['id']);
+$query = "SELECT * FROM users WHERE user_id=?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+// Jika pengguna tidak ditemukan, redirect dengan notifikasi error
+if (!$user) {
+    $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠ User ID tidak ditemukan!'];
+    header("Location: users.php");
+    exit();
+}
+
+$stmt->close();
+$conn->close();
+
+include('.includes/header.php');
+include('.includes/toast_notification.php');
 ?>
 
-<div class="container-xxl flex-grow-1 my-4">
-    <h1 class="mb-4">Edit User</h1>
+<div class="container mt-5">
+    <div class="card p-4">
+        <h2 class="text-center">Edit User</h2>
+        <form action="edit_users.php?id=<?= htmlspecialchars($user['user_id']); ?>" method="POST">
+            
+            <!-- Field Nama -->
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="nama" name="nama" value="<?= htmlspecialchars($user['nama']); ?>" required>
+                <label for="nama">Nama</label>
+            </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="nama" class="form-label">Nama</label>
-                    <input type="text" class="form-control" id="nama" name="nama" value="<?= htmlspecialchars($user['nama']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="kontak" class="form-label">Kontak</label>
-                    <input type="text" class="form-control" id="kontak" name="kontak" value="<?= htmlspecialchars($user['kontak']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($user['username']); ?>" required>
-                </div>
-                <div class="mb-3">
-                    <label for="role" class="form-label">Role</label>
-                    <select class="form-select" id="role" name="role" required>
-                        <option value="admin" <?= ($user['role'] == 'admin') ? 'selected' : ''; ?>>Admin</option>
-                        <option value="pelanggan" <?= ($user['role'] == 'pelanggan') ? 'selected' : ''; ?>>Customer</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Update User</button>
-            </form>
-        </div>
+            <!-- Field Kontak -->
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="kontak" name="kontak" value="<?= htmlspecialchars($user['kontak']); ?>" required>
+                <label for="kontak">Kontak</label>
+            </div>
+
+            <!-- Field Username -->
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" value="<?= htmlspecialchars($user['username']); ?>" required>
+                <label for="username">Username</label>
+            </div>
+
+            <!-- Field Role -->
+            <div class="form-floating mb-3">
+                <select class="form-select" id="role" name="role" required>
+                    <option value="admin" <?= ($user['role'] === 'admin') ? 'selected' : ''; ?>>Admin</option>
+                    <option value="pelanggan" <?= ($user['role'] === 'pelanggan') ? 'selected' : ''; ?>>Pelanggan</option>
+                </select>
+                <label for="role">Role</label>
+            </div>
+
+            <!-- Tombol -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success mx-2">Update</button>
+                <a href="users.php" class="btn btn-secondary mx-2">Kembali</a>
+            </div>
+
+        </form>
     </div>
 </div>
 
