@@ -1,5 +1,5 @@
 <?php
-require_once('.includes/init_session.php');
+require_once('../.includes/init_session.php');
 include("./.layouts/header.php"); 
 require_once('.includes/toast_notification.php');
 ?>
