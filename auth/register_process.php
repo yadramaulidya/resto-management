@@ -1,54 +1,49 @@
 <?php
+ fitur-login
 require_once('.includes/init_session.php');
+
+    session_start();
+
+ main
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data dari form
-    $kontak = $_POST["kontak"];
-    $nama = $_POST["nama"];
-    $username = $_POST["username"];
-    $password = $_POST["password"];
-    
-    // Hash password untuk keamanan
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    $role = "pelanggan";  // Set role menjadi pelanggan
+    $kontak = trim($_POST['kontak']);
+    $nama = trim($_POST['nama']);
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    // Pastikan form tidak kosong (validasi)
     if (empty($kontak) || empty($nama) || empty($username) || empty($password)) {
-        $_SESSION['notification'] = [
-            'type' => 'danger',
-            'message' => 'Semua kolom harus diisi!'
-        ];
-        header('Location: register.php');
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Semua kolom harus diisi!'];
+        header("Location: register.php");
         exit();
     }
 
-    // Gunakan prepared statement untuk menghindari SQL Injection
-    $stmt = $conn->prepare("INSERT INTO users (kontak, nama, username, password, role) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $kontak, $nama, $username, $hashedPassword, $role);
+    $query = "SELECT user_id FROM users WHERE username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Eksekusi query dan periksa hasilnya
-    if ($stmt->execute()) {
-        $_SESSION['notification'] = [
-            'type' => 'primary',
-            'message' => 'Registrasi Berhasil!'
-        ];
-    } else {
-        $_SESSION['notification'] = [
-            'type' => 'danger',
-            'message' => 'Gagal Registrasi: ' . $stmt->error
-        ];
+    if ($result->num_rows > 0) {
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Username sudah digunakan!'];
+        header("Location: register.php");
+        exit();
     }
 
-    // Tutup statement dan koneksi
-    $stmt->close();
-    $conn->close();
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $insert_query = "INSERT INTO users (kontak, nama, username, password, role) VALUES (?, ?, ?, ?, 'pelanggan')";
+    $stmt_insert = $conn->prepare($insert_query);
+    $stmt_insert->bind_param("ssss", $kontak, $nama, $username, $hashed_password);
 
-    // Redirect ke login setelah selesai
-    header('Location: login.php');
-    exit();
+    if ($stmt_insert->execute()) {
+        $_SESSION['notification'] = ['type' => 'success', 'message' => 'Pendaftaran berhasil! Silakan login.'];
+        header("Location: login.php");
+        exit();
+    } else {
+        $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Terjadi kesalahan saat mendaftar!'];
+        header("Location: register.php");
+        exit();
+    }
 }
-
-// Tutup koneksi jika tidak ada form yang dikirim
-$conn->close();
 ?>
