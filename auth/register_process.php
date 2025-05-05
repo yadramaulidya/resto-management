@@ -1,14 +1,5 @@
 <?php
- fitur-register
-require_once('.includes/init_session.php');
-
- fitur-login
-require_once('.includes/init_session.php');
-
-    session_start();
-
- main
- main
+require_once('../.includes/init_session.php');
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -16,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = trim($_POST['nama']);
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-
+//
     if (empty($kontak) || empty($nama) || empty($username) || empty($password)) {
         $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Semua kolom harus diisi!'];
         header("Location: register.php");
