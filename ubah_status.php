@@ -3,6 +3,7 @@ require_once('config.php');
 session_start(); 
 
 $title = "Ubah Status Pesanan";
+
 if (!isset($_GET['pesanan_id']) || empty($_GET['pesanan_id'])) {
     $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ ID Pesanan tidak ditemukan!'];
     header('Location: pesanan.php');
@@ -39,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['notification'] = ['type' => 'danger', 'message' => $e->getMessage()];
     }
     header('Location: pesanan.php'); 
+    exit();
 }
 
 include('.includes/header.php');
@@ -48,7 +50,6 @@ include('.includes/toast_notification.php');
 <div class="container-xxl flex-grow-1 container-p-y">
   <h1 class="my-4">Ubah Status Pesanan</h1>
 
-  <!-- Menampilkan Notifikasi dengan Warna Coklat -->
   <?php if (isset($_SESSION['notification'])): ?>
     <div class="alert text-center" style="background-color: #8B4513; color: white;">
       <?= $_SESSION['notification']['message']; ?>
