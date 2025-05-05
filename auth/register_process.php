@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nama = trim($_POST['nama']);
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-
+//
     if (empty($kontak) || empty($nama) || empty($username) || empty($password)) {
         $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Semua kolom harus diisi!'];
         header("Location: register.php");
