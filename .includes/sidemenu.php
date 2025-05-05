@@ -57,7 +57,7 @@
         </a>
       </li>
       <li class="menu-item">
-        <a href="pesan_menu.php" class="menu-link">
+        <a href="pesananpelanggan.php" class="menu-link">
           <i class="menu-icon tf-icons bx bx-cart"></i>
           <div>Pesanan</div>
         </a>

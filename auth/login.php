@@ -1,7 +1,13 @@
 <?php
-require_once('../.includes/init_session.php');
-include("./.layouts/header.php"); 
-include('../.includes/toast_notification.php');
+// Pastikan sesi hanya dimulai jika belum aktif
+    session_start();
+
+
+// Cek apakah ada notifikasi yang dikirim dari loginauth.php
+$notification = $_SESSION['notification'] ?? null;
+unset($_SESSION['notification']); // Hapus notifikasi setelah ditampilkan
+
+include("./.layouts/header.php"); // Pastikan path benar
 ?>
 
 <!-- Login Card -->
@@ -41,4 +47,4 @@ include('../.includes/toast_notification.php');
 </div>
 <!-- /Login Card -->
 
-<?php include("./.layouts/footer.php"); ?>
+<?php include("./.layouts/footer.php"); // Pastikan path benar ?>
