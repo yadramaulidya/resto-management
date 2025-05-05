@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once('.includes/init_session.php');
 require_once('config.php');
 include('.includes/header.php');
 $title = "Laporan Pesanan";
