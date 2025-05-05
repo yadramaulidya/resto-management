@@ -118,7 +118,7 @@ if ($role === "admin") {
                                 </td>
                                 <td><?= htmlspecialchars($row["tanggal_pemesanan"]); ?></td>
                                 <td>
-                                    <a href="detail_pesanan.php?pesanan_id=<?= $row["pesanan_id"]; ?>" class="btn btn-sm btn-info">Detail</a>
+                                    <a href="pesananpelanggan.php?pesanan_id=<?= $row["pesanan_id"]; ?>" class="btn btn-sm btn-info">Detail</a>
                                 </td>
                             </tr>
                             <?php endwhile; ?>
