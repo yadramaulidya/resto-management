@@ -1,5 +1,5 @@
 <?php
-require_once('.includes/init_session.php');
+session_start(); 
 require_once('config.php');
 include('.includes/header.php');
 
@@ -13,11 +13,11 @@ if (!$result) {
 }
 ?>
 
+<?php include('.includes/toast_notification.php'); ?>
+
 <div class="container-xxl flex-grow-1 my-4">
     <h1 class="mb-4">Daftar Pengguna</h1>
     <a href="tambah_users.php" class="btn btn-primary mb-3">➕ Tambah Pengguna</a>
-
-    <?php include('.includes/toast_notification.php'); ?>
 
     <div class="card">
         <div class="card-body">
