@@ -1,10 +1,7 @@
 <?php
-    session_start();
-
-$notification = $_SESSION['notification'] ?? null;
-unset($_SESSION['notification']);
-
+require_once('.includes/init_session.php');
 include("./.layouts/header.php"); 
+require_once('.includes/toast_notification.php');
 ?>
 
 <!-- Login Card -->
@@ -44,4 +41,4 @@ include("./.layouts/header.php");
 </div>
 <!-- /Login Card -->
 
-<?php include("./.layouts/footer.php"); // Pastikan path benar ?>
+<?php include("./.layouts/footer.php"); ?>
