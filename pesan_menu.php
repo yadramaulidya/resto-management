@@ -1,9 +1,6 @@
 <?php
+require_once('.includes/init_session.php');
 require_once('config.php');
-
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 
 $title = "Pemesanan Menu";
 

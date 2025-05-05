@@ -1,6 +1,6 @@
 <?php
+require_once('.includes/init_session.php');
 require_once('config.php');
-session_start(); 
 
 $title = "Ubah Status Pesanan";
 
