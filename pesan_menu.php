@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($stmt->execute()) {
             $_SESSION['notification'] = ['type' => 'success', 'message' => 'Pesanan berhasil ditambahkan!'];
-            header('Location: riwayat_pesanan.php');
+            header('Location: pesananpelanggan.php');
             exit;
         } else {
             $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Gagal membuat pesanan!'];
