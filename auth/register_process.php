@@ -1,5 +1,14 @@
 <?php
+ fitur-register
 require_once('.includes/init_session.php');
+
+ fitur-login
+require_once('.includes/init_session.php');
+
+    session_start();
+
+ main
+ main
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
