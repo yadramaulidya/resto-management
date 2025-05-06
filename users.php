@@ -4,6 +4,7 @@ require_once('config.php');
 include('.includes/header.php');
 
 // Query database
+$index = 1;
 $query = "SELECT * FROM users ORDER BY user_id ASC";
 $result = mysqli_query($conn, $query);
 
@@ -35,7 +36,7 @@ if (!$result) {
                 <tbody>
                     <?php while ($row = mysqli_fetch_assoc($result)): ?>
                     <tr>
-                        <td><?= htmlspecialchars($row['user_id']); ?></td>
+                        <td><?= $index++;?></td>
                         <td><?= htmlspecialchars($row['nama']); ?></td>
                         <td><?= htmlspecialchars($row['kontak']); ?></td>
                         <td><?= htmlspecialchars($row['username']); ?></td>

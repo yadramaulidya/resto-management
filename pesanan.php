@@ -12,6 +12,7 @@ if (isset($_SESSION['notification'])) {
 include('./.includes/toast_notification.php');
 
 $selected_status = isset($_GET['status']) ? $_GET['status'] : "";
+$index = 1;
 $query = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama AS menu_name, users.nama AS user_name
           FROM pesanan
           JOIN menu ON pesanan.menu_id = menu.menu_id
@@ -61,7 +62,7 @@ $result = $stmt->get_result();
         <tbody>
           <?php while ($row = $result->fetch_assoc()): ?>
             <tr>
-              <td><?= $row['pesanan_id']; ?></td>
+             <td><?= $index++;?></td>
               <td><?= $row['user_name']; ?></td>
               <td><?= $row['menu_name']; ?></td>
               <td><?= $row['jumlah']; ?></td>

@@ -6,6 +6,7 @@ include('.includes/toast_notification.php');
 $title = "Pesanan Aktif";
 $user_id = $_SESSION['user_id'];
 
+$index = 1;
 $query = "SELECT pesanan.pesanan_id, pesanan.jumlah, pesanan.status, pesanan.tanggal_pemesanan, menu.nama AS menu_name
           FROM pesanan
           JOIN menu ON pesanan.menu_id = menu.menu_id
@@ -47,7 +48,7 @@ $pesanan = $stmt->get_result();
         <table class="table table-striped table-hover align-middle">
           <thead>
             <tr>
-              <th>#</th>
+            <th>#</th>
               <th>Menu</th>
               <th>Jumlah</th>
               <th>Status</th>
@@ -57,7 +58,7 @@ $pesanan = $stmt->get_result();
           <tbody>
             <?php while ($row = $pesanan->fetch_assoc()): ?>
             <tr>
-              <td><?= htmlspecialchars($row['pesanan_id']); ?></td>
+              <td><?= $index++;?></td>
               <td><?= htmlspecialchars($row['menu_name']); ?></td>
               <td><?= htmlspecialchars($row['jumlah']); ?></td>
               <td><?= ucfirst(htmlspecialchars($row['status'])); ?></td>
