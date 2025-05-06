@@ -1,5 +1,5 @@
 <?php
-require_once('../.includes/init_session.php');
+session_start();
 require_once("../config.php");
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt_insert->execute()) {
         $_SESSION['notification'] = ['type' => 'success', 'message' => 'Pendaftaran berhasil! Silakan login.'];
-        header("Location: login.php");
+        header("Location: ./login.php");
         exit();
     } else {
         $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Terjadi kesalahan saat mendaftar!'];
