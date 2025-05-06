@@ -63,7 +63,6 @@ if ($role === "admin") {
 <div class="container-xxl flex-grow-1 container-p-y">
     <!-- Dashboard Pelanggan -->
     <?php if ($role === "pelanggan"): ?>
-        <!-- Tabel Ringkasan Pesanan Terbaru untuk Pelanggan -->
         <div class="card mb-4">
             <div class="card-header">
                 <h4>Riwayat Pesanan Terbaru</h4>
@@ -131,7 +130,7 @@ if ($role === "admin") {
         </div>
         <!-- Tombol menuju halaman pemesanan menu -->
         <div class="text-end">
-            <a href="menu.php" class="btn btn-primary">
+            <a href="menu_pelanggan.php" class="btn btn-primary">
                 <i class="bx bx-food-menu me-1"></i> Pesan Menu Sekarang
             </a>
         </div>
