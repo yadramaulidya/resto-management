@@ -60,7 +60,7 @@ if (isset($_POST['update_stok'])) {
     if ($stmt->execute()) {
         $_SESSION['notification'] = ['type' => 'success', 'message' => 'Stok berhasil diperbarui!'];
         ob_end_clean();
-        header("Location: menu_admin.php?page=" . $page);
+        header("Location: menu.php?page=" . $page);
         exit;
     } else {
         $_SESSION['notification'] = ['type' => 'danger', 'message' => 'Gagal memperbarui stok.'];
