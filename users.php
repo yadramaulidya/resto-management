@@ -22,8 +22,8 @@ if (!$result) {
 
     <div class="card">
         <div class="card-body">
-            <table class="table table-striped table-bordered">
-                <thead class="table-dark">
+            <table class="table table-striped">
+                <thead class="table-light">
                     <tr>
                         <th>ID</th>
                         <th>Nama</th>
