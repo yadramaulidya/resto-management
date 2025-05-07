@@ -1,6 +1,6 @@
 <?php
+require_once('.includes/init_session.php');
 require_once('config.php');
-session_start();
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     $_SESSION['notification'] = ['type' => 'danger', 'message' => '⚠️ ID menu tidak ditemukan!'];
